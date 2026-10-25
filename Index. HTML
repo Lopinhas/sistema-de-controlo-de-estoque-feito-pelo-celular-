@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockPro Mobile</title>
+<style>
+body{font-family:Arial;background:#f1f5f9;margin:0;padding:16px;color:#1e293b}
+header{background:#0f172a;color:white;padding:20px;border-radius:12px;text-align:center}
+.card{background:white;padding:18px;margin-top:16px;border-radius:12px}
+input,select,button{width:100%;padding:12px;margin-top:10px;box-sizing:border-box;font-size:16px;border-radius:8px}
+button{background:#2563eb;color:white;border:0;font-weight:bold}
+.produto{padding:12px;border:1px solid #ddd;margin-top:10px;border-radius:8px}
+</style>
+</head>
+<body>
+<header>
+<h1>StockPro Mobile</h1>
+<p>Controle de estoque</p>
+</header>
+
+<section class="card">
+<h2>Cadastrar produto</h2>
+<input id="codigo" placeholder="Código do produto">
+<input id="nome" placeholder="Nome do produto">
+<input id="quantidade" type="number" min="0" placeholder="Quantidade">
+<select id="prateleira">
+<option>A1</option>
+<option>A2</option>
+<option>A3</option>
+<option>A4</option>
+<option>A5</option>
+<option>A6</option>
+<option>A7</option>
+</select>
+<button onclick="cadastrar()">Cadastrar produto</button>
+<p id="mensagem"></p>
+</section>
+
+<section class="card">
+<h2>Pesquisar produto</h2>
+<input id="pesquisa" placeholder="Digite código ou nome">
+<button onclick="pesquisar()">Pesquisar</button>
+<div id="resultado"></div>
+</section>
+
+<section class="card">
+<h2>Estoque cadastrado</h2>
+<div id="lista"></div>
+</section>
+
+<script>
+let produtos=JSON.parse(localStorage.getItem("stockpro")||"[]");
+
+function cadastrar(){
+const codigo=document.getElementById("codigo").value.trim();
+const nome=document.getElementById("nome").value.trim();
+const quantidade=document.getElementById("quantidade").value;
+const prateleira=document.getElementById("prateleira").value;
+const mensagem=document.getElementById("mensagem");
+
+if(!codigo||!nome||quantidade===""||Number(quantidade)<0||!Number.isInteger(Number(quantidade))){
+mensagem.textContent="Preencha os campos corretamente.";
+return;
+}
+
+if(produtos.some(p=>p.codigo.toLowerCase()===codigo.toLowerCase())){
+mensagem.textContent="Código já cadastrado.";
+return;
+}
+
+produtos.push({codigo,nome,quantidade:Number(quantidade),prateleira});
+localStorage.setItem("stockpro",JSON.stringify(produtos));
+mensagem.textContent="Produto cadastrado com sucesso!";
+mostrar();
+}
+
+function escapar(texto){
+return String(texto).replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+})[c]);
+}
+
+function mostrar(){
+document.getElementById("lista").innerHTML=produtos.map(p=>
+`<div class="produto"><b>${escapar(p.nome)}</b><br>Código: ${escapar(p.codigo)}<br>Quantidade: ${p.quantidade}<br>Prateleira: ${escapar(p.prateleira)}</div>`
+).join("")||"Nenhum produto cadastrado.";
+}
+
+function pesquisar(){
+const termo=document.getElementById("pesquisa").value.trim().toLowerCase();
+const encontrados=produtos.filter(p=>
+p.codigo.toLowerCase().includes(termo)||
+p.nome.toLowerCase().includes(termo)
+);
+
+document.getElementById("resultado").innerHTML=encontrados.map(p=>
+`<div class="produto"><b>${escapar(p.nome)}</b><br>Código: ${escapar(p.codigo)}<br>Prateleira: ${escapar(p.prateleira)}<br>Quantidade: ${p.quantidade}</div>`
+).join("")||"Produto não encontrado.";
+}
+
+mostrar();
+</script>
+</body>
+</html>
